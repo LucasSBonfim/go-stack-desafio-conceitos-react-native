@@ -1,4 +1,5 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
+import api from './services/api';
 
 import {
   SafeAreaView,
@@ -11,45 +12,68 @@ import {
 } from "react-native";
 
 export default function App() {
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+      api.get('/repositories').then(response => {
+          console.log(response)
+          setProjects(response.data);
+      })
+  }, [])
+
   async function handleLikeRepository(id) {
-    // Implement "Like Repository" functionality
+
+    const response = await api.post(`/repositories/${id}/like`)
+  
+    if (response.status === 200){
+      const atualizaProjeto = projects.map(project => {
+        if (project.id === id) {
+          console.log('ou aqui')
+          return response.data;
+        } else {
+          console.log('aqui')
+          return project;
+        }
+      });
+      setProjects(atualizaProjeto);
+    }
+  
   }
 
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#7159c1" />
       <SafeAreaView style={styles.container}>
-        <View style={styles.repositoryContainer}>
-          <Text style={styles.repository}>Repository 1</Text>
+        <FlatList 
+          data={projects}
+          keyExtractor={project => project.id}
+          renderItem={({item : project}) => (
+          <View style={styles.repositoryContainer}>
+            <Text style={styles.repository}>{project.title}</Text>
 
-          <View style={styles.techsContainer}>
-            <Text style={styles.tech}>
-              ReactJS
-            </Text>
-            <Text style={styles.tech}>
-              Node.js
-            </Text>
-          </View>
+            <View style={styles.techsContainer}>
+                {project.techs.map(techs => <Text style={styles.tech} key={techs}> {techs} </Text>)}
+            </View>
 
-          <View style={styles.likesContainer}>
-            <Text
-              style={styles.likeText}
-              // Remember to replace "1" below with repository ID: {`repository-likes-${repository.id}`}
-              testID={`repository-likes-1`}
+            <View style={styles.likesContainer}>
+              <Text
+                style={styles.likeText}
+                testID={`repository-likes-${project.id}`}
+              >
+              {project.likes} curtidas
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleLikeRepository(`${project.id}`)}
+              testID={`like-button-${project.id}`}
             >
-              3 curtidas
-            </Text>
+              <Text style={styles.buttonText}>Curtir</Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => handleLikeRepository(1)}
-            // Remember to replace "1" below with repository ID: {`like-button-${repository.id}`}
-            testID={`like-button-1`}
-          >
-            <Text style={styles.buttonText}>Curtir</Text>
-          </TouchableOpacity>
-        </View>
+          )}>
+        </FlatList>
       </SafeAreaView>
     </>
   );
@@ -61,6 +85,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#7159c1",
   },
   repositoryContainer: {
+    borderRadius: 10,
     marginBottom: 15,
     marginHorizontal: 15,
     backgroundColor: "#fff",
@@ -68,6 +93,7 @@ const styles = StyleSheet.create({
   },
   repository: {
     fontSize: 32,
+    color: '#7159c1',
     fontWeight: "bold",
   },
   techsContainer: {
@@ -75,13 +101,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   tech: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "bold",
     marginRight: 10,
-    backgroundColor: "#04d361",
+    backgroundColor: '#105077',
     paddingHorizontal: 10,
     paddingVertical: 5,
-    color: "#fff",
+    color: "#FFF",
   },
   likesContainer: {
     marginTop: 15,
@@ -101,7 +127,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginRight: 10,
     color: "#fff",
-    backgroundColor: "#7159c1",
+    backgroundColor: "#105077",
     padding: 15,
   },
 });
