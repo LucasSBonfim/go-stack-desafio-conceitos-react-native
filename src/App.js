@@ -27,13 +27,7 @@ export default function App() {
   
     if (response.status === 200){
       const atualizaProjeto = projects.map(project => {
-        if (project.id === id) {
-          console.log('ou aqui')
-          return response.data;
-        } else {
-          console.log('aqui')
-          return project;
-        }
+        return project.id === id ? response.data : project;
       });
       setProjects(atualizaProjeto);
     }
